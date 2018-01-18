@@ -1,0 +1,46 @@
+version: '2'
+services:
+  app:
+    build:
+      context: ./app
+      dockerfile: app.dockerfile
+    working_dir: /var/www
+    container_name: kink_key_web_app
+    volumes:
+      - ../:/var/www
+    env_file: ../.env
+  server:
+    build:
+      context: ./server
+      dockerfile: server.dockerfile
+    working_dir: /var/www
+    container_name: kink_key_web_server
+    volumes:
+      - ../certs:/etc/ssl/certs
+    volumes_from:
+      - app
+    ports:
+      - 80:80
+      - 443:443
+  database:
+    build:
+      context: ./db
+      dockerfile: db.dockerfile
+    volumes:
+      - kink_key_db:/var/lib/mysql
+    container_name: kink_key_web_database
+    env_file: ../.env
+    ports:
+        - "3306:3306"
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links:
+      - database
+    container_name: kink_key_web_phpmyadmin
+    environment:
+      PMA_HOST: database
+      PMA_PORT: 3306
+    ports:
+      - '8081:80'
+volumes:
+  kink_key_db:
